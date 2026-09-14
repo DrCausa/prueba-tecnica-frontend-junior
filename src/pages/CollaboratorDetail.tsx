@@ -29,6 +29,8 @@ const CollaboratorDetail = () => {
         setIsLoading(false)
       }
     }
+
+    fetchCollaborator()
   }, [id])
 
   return (
