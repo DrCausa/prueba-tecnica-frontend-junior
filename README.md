@@ -1,221 +1,57 @@
-# Prueba Técnica — Frontend (React)
+# Prueba Técnica — Frontend Junior
 
-> Basada en el módulo **Colaboradores** del proyecto ELISA.
-> Objetivo: evaluar fundamentos de React + TypeScript, consumo de datos, formularios,
-> validación y buenas prácticas de UI. **No** se espera que implementes todo el módulo:
-> el alcance está acotado para una persona junior.
+Este proyecto es una mini-aplicación tipo SPA (Single Page Application) desarrollada en **React 19** y **TypeScript**, diseñada para gestionar colaboradores mediante un listado interactivo, un formulario de registro y una vista de detalles.
 
----
+## Cómo instalar y levantar el proyecto
 
-## 1. Contexto
+Asegúrate de tener Node.js instalado en tu sistema.
 
-Una empresa gestiona a sus **colaboradores** (empleados) desde un panel interno.
-Un usuario administrador necesita poder **listar**, **buscar/filtrar** y **registrar**
-colaboradores, además de **activarlos o desactivarlos**.
+1. **Clonar o descomprimir el proyecto:**
+  Abre una terminal y navega hasta la carpeta del proyecto.
 
-Tu tarea es construir una **mini-aplicación de una sola sección** ("Colaboradores")
-que cubra ese flujo básico.
+2. **Instalar dependencias:**
+  ```bash
+  npm install
 
----
+  # o si usas pnpm:
+  pnpm install
+  ```
 
-## 2. Objetivo
+3. **Levantar el servidor de desarrollo:**
+  ```bash
+  npm run dev
 
-Construir una SPA en **React + TypeScript** con:
+  # o si usas pnpm:
+  pnpm run dev
+  ```
 
-1. Una **vista de listado** de colaboradores (tabla) con búsqueda y filtros.
-2. Un **formulario de registro** de colaborador con validación.
-3. La acción de **activar / desactivar** un colaborador.
+4. **Abrir en el navegador:**
+  La aplicación estará corriendo normalmente en `http://localhost:5173`.
 
-El foco es la **calidad del código**, el **tipado** y la **experiencia de usuario**
-(estados de carga, vacíos y errores), no la cantidad de funcionalidades.
+## Decisiones Técnicas
 
----
+Durante el desarrollo, prioricé la calidad del código, el tipado estricto y la experiencia de usuario (UX):
 
-## 3. Stack requerido
+- **Arquitectura y Custom Hooks:** Se separó la lógica de la vista mediante el hook `useCollaborators` para manejar los estados globales (carga, error, datos) y centralizar la comunicación con la "API".
+- **Navegación Dinámica:** Se integró `react-router` para manejar las transiciones fluidas entre el listado, el formulario de registro y la vista de detalle, extrayendo parámetros de la URL (`:id`) para la carga de datos específicos.
+- **Optimización de Búsqueda:** Se implementó un hook `useDebounce` (500ms) para el input de búsqueda. Esto evita re-renderizados innecesarios y simula el comportamiento óptimo contra un backend real al no filtrar/consultar en cada pulsación de tecla.
+- **Validación Robusta:** Se integró `React Hook Form` junto con `Zod` configurado en `mode: 'onChange'`. Esto permite que el botón "Guardar" se habilite/deshabilite de forma dinámica y proporciona *feedback* en tiempo real al usuario.
+- **Mock de API:** Se optó por la Opción A, creando un estado en memoria (`mockCollaborators.ts`) con una función `delay` para simular la latencia de red y poder observar los *skeleton loaders* y estados de transición en todas las vistas.
+- **UI Responsiva:** Se utilizó Tailwind CSS (v4) construyendo componentes a medida sin depender de librerías externas de UI. La tabla implementa `overflow-x-auto` para garantizar la accesibilidad en dispositivos móviles.
 
-Obligatorio:
+## Qué haría con más tiempo
 
-- **React 18 o 19** con **Vite**
-- **TypeScript** (modo estricto)
-- **React Router** para la navegación entre listado y formulario
-- **React Hook Form** + **Zod** para el formulario y su validación
-- **Tailwind CSS** para los estilos
+Si el alcance de tiempo fuera mayor, implementaría las siguientes mejoras:
 
-Opcional (suma, no obligatorio):
+1. **Testing:** Añadiría pruebas unitarias e integración utilizando *Vitest* y *React Testing Library*, enfocándome en la lógica del hook de filtrado y las validaciones del formulario.
+2. **Paginación:** Implementaría un sistema de paginación o *infinite scroll* en la tabla, lo cual es vital cuando la base de datos crece.
+3. **Notificaciones Mejoradas:** Cambiaría las alertas nativas (`alert()`) por un sistema de *toasts* profesional usando librerías como `sonner` o `react-hot-toast`.
+4. **Mock de Red (MSW):** Migraría el mockeo en memoria a *Mock Service Worker (MSW)* para interceptar peticiones a nivel de red, simulando un entorno RESTful mucho más realista.
+5. **Persistencia en URL:** Sincronizaría los filtros (búsqueda, estado, rol) con los *query parameters* de la URL para que los resultados puedan compartirse directamente con un link.
 
-- **shadcn/ui** para componentes (Table, Card, Button, Input, Select, Badge, Dialog)
-- **Axios** para las peticiones
-- **lucide-react** para íconos
+## Bonus Completados
 
-> Si no usás shadcn/ui, podés maquetar los componentes a mano con Tailwind. No pasa nada.
-
----
-
-## 4. Requisitos funcionales
-
-### 4.1 Listado de colaboradores (obligatorio)
-
-- Mostrar los colaboradores en una **tabla** con las columnas:
-  `Nombre completo`, `Correo`, `Rol`, `Estado` y `Acciones`.
-- **Buscador** por nombre o correo. Debe usar **debounce** (300–500 ms) para no
-  filtrar en cada tecla.
-- **Filtro por estado**: Todos / Activos / Inactivos (un `select`).
-- **Filtro por rol** (un `select`).
-- **Badge de estado** con color: verde para *Activo*, gris/rojo para *Inactivo*.
-- **Estado de carga**: mostrar un *skeleton* o un texto/spinner mientras se cargan los datos.
-- **Estado vacío**: si no hay resultados, mostrar un mensaje claro
-  (ej. *"No se encontraron colaboradores"*).
-- **Botón "Registrar colaborador"** que navega al formulario.
-
-### 4.2 Registro de colaborador (obligatorio)
-
-- Formulario dentro de una tarjeta/página, con los campos:
-  - `Nombres` (requerido)
-  - `Apellidos` (requerido)
-  - `Correo` (requerido, formato de email válido)
-  - `Teléfono` (requerido)
-  - `Rol` (select, requerido)
-  - `Contraseña` (requerido, mínimo 8 caracteres, al menos 1 mayúscula y 1 número)
-- Validación con **Zod** integrada vía **React Hook Form** (`zodResolver`).
-- Mostrar los **mensajes de error** debajo de cada campo.
-- El botón **"Guardar"** debe estar **deshabilitado** mientras el formulario sea inválido
-  o mientras se esté enviando.
-- Al guardar con éxito: mostrar una **notificación** (toast o alerta) y **redirigir**
-  al listado.
-- Botón **"Cancelar"** que vuelve al listado sin guardar.
-
-### 4.3 Activar / Desactivar (obligatorio)
-
-- En la columna `Acciones`, un botón para **cambiar el estado** del colaborador.
-- Antes de aplicar el cambio, mostrar un **modal de confirmación**
-  (*"¿Desea desactivar a este colaborador?"*).
-- Al confirmar, actualizar el estado en la tabla y mostrar una notificación.
-
----
-
-## 5. Datos / API
-
-No necesitás un backend real. Elegí **una** de estas opciones:
-
-- **Opción A (recomendada):** un archivo local `mockCollaborators.ts` con un array
-  en memoria, y funciones simuladas (`getCollaborators`, `createCollaborator`,
-  `toggleStatus`) que devuelvan `Promise` con un pequeño `setTimeout` para simular
-  latencia (y así poder mostrar el estado de carga).
-- **Opción B:** [`json-server`](https://github.com/typicode/json-server) o
-  [MSW](https://mswjs.io/) apuntando a un JSON local.
-
-### Ejemplo de estructura de datos
-
-```ts
-interface Collaborator {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  role: "Admin" | "Scrum Master" | "Tech Lead" | "Developer";
-  is_active: boolean;
-  created_at: string; // ISO
-}
-```
-
-```json
-[
-  {
-    "id": 1,
-    "first_name": "Pedro",
-    "last_name": "García",
-    "email": "pedro.garcia@empresa.com",
-    "phone": "999000001",
-    "role": "Developer",
-    "is_active": true,
-    "created_at": "2026-01-10T10:00:00Z"
-  },
-  {
-    "id": 2,
-    "first_name": "Ana",
-    "last_name": "Torres",
-    "email": "ana.torres@empresa.com",
-    "phone": "999000002",
-    "role": "Tech Lead",
-    "is_active": false,
-    "created_at": "2026-02-05T14:30:00Z"
-  }
-]
-```
-
----
-
-## 6. Requisitos técnicos
-
-- Todo el código en **TypeScript**: tipar props, estado, y respuestas de datos
-  (nada de `any`).
-- **Componentes reutilizables** y con responsabilidad única (evitar un solo archivo gigante).
-- Separar la **lógica** de la **vista** (por ejemplo, un custom hook `useCollaborators`
-  para el estado del listado y las llamadas a datos).
-- **Diseño responsive**: la tabla y los filtros deben verse bien en desktop y adaptarse
-  en móvil (scroll horizontal en la tabla es aceptable).
-- Estructura de carpetas ordenada (ej. `components/`, `hooks/`, `pages/`, `types/`, `api/`).
-- El proyecto debe **compilar sin errores** (`npm run build` / `pnpm build`) y sin errores de lint.
-
----
-
-## 7. Bonus (opcional — suma, no resta si no lo hacés)
-
-- **Paginación** en la tabla (ej. 10 por página).
-- **Chips de filtros aplicados** con opción de quitarlos individualmente y un
-  "Limpiar filtros".
-- **Vista de detalle** del colaborador en `/colaboradores/:id`.
-- **Edición** de un colaborador reutilizando el formulario de registro.
-- **Tests** con Vitest + Testing Library (aunque sea del formulario o del hook).
-- Ocultar el botón "Registrar" según un rol simulado (RBAC básico).
-- Persistencia de los filtros en la **URL** (query params).
-
----
-
-## 8. Criterios de evaluación
-
-| Área | Qué miramos | Peso |
-|------|-------------|------|
-| **Funcionalidad** | Que el listado, filtros, registro y activar/desactivar funcionen | 30% |
-| **Calidad de código** | Componentes claros, tipado correcto, sin duplicación, nombres consistentes | 25% |
-| **React / Hooks** | Uso correcto de `useState`, `useEffect`, custom hooks, dependencias | 15% |
-| **Formularios y validación** | RHF + Zod bien integrados, mensajes de error, UX del submit | 15% |
-| **UX / UI** | Estados de carga, vacío y error; diseño responsive y prolijo | 10% |
-| **Git y entrega** | Commits ordenados y con mensajes claros, README con instrucciones | 5% |
-
-> Valoramos más un alcance **más chico pero bien hecho** que uno grande a medias.
-
----
-
-## 9. Entregables
-
-1. **Repositorio** en GitHub (público o con acceso), o un `.zip` del proyecto
-   **sin** `node_modules`.
-2. Un **`README.md`** con:
-   - Cómo instalar y levantar el proyecto.
-   - Decisiones que tomaste y qué harías con más tiempo.
-   - Qué partes del bonus completaste (si aplica).
-3. (Opcional) Un video corto o capturas mostrando la app funcionando.
-
----
-
-## 10. Tiempo estimado
-
-- **Núcleo (secciones 4.1 a 4.3):** entre **6 y 10 horas**.
-- No es necesario que dediques más de eso. Preferimos ver hasta dónde llegás
-  con buena calidad antes que una entrega apurada.
-- Sugerencia de plazo de entrega: **3 a 5 días** desde que recibís la prueba.
-
----
-
-## 11. Recomendaciones
-
-- Empezá por el **listado con datos mockeados**, luego el **formulario**, y al final
-  **activar/desactivar**.
-- Hacé **commits pequeños** a medida que avanzás (no un único commit final).
-- Si algo no te da el tiempo, dejálo documentado en el README en vez de dejarlo a medias.
-- Ante cualquier duda de alcance, **asumí lo razonable y anotalo** — también evaluamos
-  criterio.
-
-¡Éxitos! 🚀
+- [x] Tipado estricto absoluto.
+- [x] Diseño responsivo funcional (Mobile-first en layouts, scroll adaptativo en tabla).
+- [x] Modal de confirmación customizado para acciones destructivas/críticas.
+- [x] Vista de detalle del colaborador en /colaboradores/:id
