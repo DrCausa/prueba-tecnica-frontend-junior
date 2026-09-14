@@ -1,4 +1,9 @@
+import { useState } from "react"
+import { useNavigate } from "react-router"
 import * as z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { createCollaborator } from "../api/mockCollaborators"
 
 const roles = ["Admin", "Scrum Master", "Tech Lead", "Developer"] as const
 
@@ -17,6 +22,32 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>
 
 const CollaboratorRegister = () => {
+  const navigate = useNavigate()
+  const [apiError, setApiError] = useState<string | null>(null)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
+  })
+
+  const onSubmit = async (data: RegisterFormValues) => {
+    setApiError(null)
+
+    try {
+      const { password, ...collaboratorData } = data
+      await createCollaborator(collaboratorData)
+
+      alert("Colaborador registrado con éxito")
+      navigate("/")
+    } catch (err) {
+      setApiError("Ocurrió un error al guardar el colaborador. Intenta de nuevo.")
+    }
+  }
+
   return (
     <div>CollaboratorRegister</div>
   )
